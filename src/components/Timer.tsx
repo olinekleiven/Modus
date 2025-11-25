@@ -8,7 +8,7 @@ export default function Timer() {
 
   return (
     <div className="text-center">
-      <div className="timer-number text-8xl md:text-[10rem] font-black mb-4 tracking-tighter text-gray-900 dark:text-white drop-shadow-lg">
+      <div className="timer-number text-9xl md:text-[12rem] lg:text-[14rem] font-black mb-4 tracking-tighter text-gray-900 dark:text-white drop-shadow-lg">
         {String(minutes).padStart(2, '0')}:{String(seconds).padStart(2, '0')}
       </div>
     </div>
