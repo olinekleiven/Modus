@@ -1,5 +1,7 @@
 # Modus
 
+Ein tidtakar som holder deg på rett kurs, slik du får gjort det du skal.
+
 A Pomodoro focus timer app inspired by [pomofocus.io](https://pomofocus.io). This project builds upon the original idea with additional features and customizations.
 
 ## Features
