@@ -114,35 +114,6 @@ const playResetSound = () => {
   }
 };
 
-const playAlarmSound = () => {
-  try {
-    const audioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
-    
-    // Play multiple beeps with varying frequency for alarm effect
-    for (let i = 0; i < 4; i++) {
-      setTimeout(() => {
-        const oscillator = audioContext.createOscillator();
-        const gainNode = audioContext.createGain();
-        
-        oscillator.connect(gainNode);
-        gainNode.connect(audioContext.destination);
-        
-        // Vary frequency for more interesting alarm
-        oscillator.frequency.value = 700 + (i % 2) * 200; // Alternates between 700Hz and 900Hz
-        oscillator.type = 'sine';
-        
-        gainNode.gain.setValueAtTime(0.4, audioContext.currentTime);
-        gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.4);
-        
-        oscillator.start(audioContext.currentTime);
-        oscillator.stop(audioContext.currentTime + 0.4);
-      }, i * 250);
-    }
-  } catch (e) {
-    console.log('Alarm sound failed');
-  }
-};
-
 const playAlarmMusic = () => {
   try {
     // Stop any existing music
