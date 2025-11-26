@@ -122,10 +122,11 @@ const playAlarmMusic = () => {
       alarmMusic.currentTime = 0;
     }
     
-    // Create and play the music
+    // Create and play the music starting from 6 seconds
     alarmMusic = new Audio('/simple.mp3');
     alarmMusic.loop = true;
     alarmMusic.volume = 0.7;
+    alarmMusic.currentTime = 6; // Start from 0:06
     alarmMusic.play().catch((e) => {
       console.log('Failed to play alarm music:', e);
     });
@@ -172,6 +173,10 @@ export const useTimerStore = create<TimerStore>()(
           // Resume from pause - calculate how much time was already elapsed
           const elapsed = Math.floor((pausedAt - startTime) / 1000);
           const newStartTime = now - elapsed * 1000;
+          const { settings } = get();
+          if (settings.soundEnabled) {
+            playStartSound();
+          }
           set({
             isRunning: true,
             startTime: newStartTime,
@@ -279,23 +284,70 @@ export const useTimerStore = create<TimerStore>()(
 
       addTask: (title, pomodoros = 1) => {
         const { tasks } = get();
+        // New tasks go to the top (order 0), shift all existing tasks down
+        const updatedTasks = tasks.map((task) => ({
+          ...task,
+          order: task.order + 1,
+        }));
         const newTask: Task = {
           id: crypto.randomUUID(),
           title,
           completed: false,
           pomodoros,
-          order: tasks.length,
+          order: 0,
         };
-        set({ tasks: [...tasks, newTask] });
+        set({ tasks: [newTask, ...updatedTasks] });
       },
 
       toggleTask: (id) => {
         const { tasks } = get();
-        set({
-          tasks: tasks.map((task) =>
-            task.id === id ? { ...task, completed: !task.completed } : task
-          ),
-        });
+        const toggledTasks = tasks.map((task) =>
+          task.id === id ? { ...task, completed: !task.completed } : task
+        );
+        
+        // Find the toggled task
+        const toggledTask = toggledTasks.find((t) => t.id === id);
+        if (!toggledTask) return;
+        
+        // If task was just completed, move it to the bottom
+        if (toggledTask.completed) {
+          const maxOrder = Math.max(...toggledTasks.map((t) => t.order), -1);
+          const completedTasks = toggledTasks.filter((t) => t.completed && t.id !== id);
+          const uncompletedTasks = toggledTasks.filter((t) => !t.completed);
+          
+          // Set the toggled task to the bottom
+          toggledTask.order = maxOrder + 1;
+          
+          // Reorder: uncompleted first, then completed (with toggled task at the very bottom)
+          const reorderedTasks = [
+            ...uncompletedTasks,
+            ...completedTasks,
+            toggledTask,
+          ];
+          
+          set({ tasks: reorderedTasks });
+        } else {
+          // If task was uncompleted, move it to the top
+          const uncompletedTasks = toggledTasks.filter((t) => !t.completed && t.id !== id);
+          const completedTasks = toggledTasks.filter((t) => t.completed);
+          
+          // Shift all uncompleted tasks down
+          const updatedUncompleted = uncompletedTasks.map((t) => ({
+            ...t,
+            order: t.order + 1,
+          }));
+          
+          // Put the uncompleted task at the top
+          toggledTask.order = 0;
+          
+          const reorderedTasks = [
+            toggledTask,
+            ...updatedUncompleted,
+            ...completedTasks,
+          ];
+          
+          set({ tasks: reorderedTasks });
+        }
       },
 
       deleteTask: (id) => {
